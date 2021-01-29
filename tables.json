@@ -1,0 +1,96 @@
+[
+  {
+    "modelName": "theses",
+    "fields": [
+      {
+        "fieldName": "title",
+        "indexed": false,
+        "value": {
+          "type": "TEXT",
+          "allowNull": false,
+          "defaultValue": null,
+          "primaryKey": false,
+          "autoIncrement": false,
+          "comment": null
+        }
+      },
+      {
+        "fieldName": "id",
+        "indexed": false,
+        "value": {
+          "type": "INT",
+          "allowNull": false,
+          "defaultValue": null,
+          "primaryKey": true,
+          "autoIncrement": false,
+          "comment": null,
+          "foreignKey": {
+            "constraint_name": "PRIMARY",
+            "source_schema": "test",
+            "source_table": "theses",
+            "source_column": "id",
+            "target_schema": null,
+            "target_table": null,
+            "target_column": null,
+            "extra": "",
+            "column_key": "PRI",
+            "isPrimaryKey": true
+          }
+        }
+      },
+      {
+        "fieldName": "createdAt",
+        "indexed": false,
+        "value": {
+          "type": "DATETIME",
+          "allowNull": false,
+          "defaultValue": null,
+          "primaryKey": false,
+          "autoIncrement": false,
+          "comment": null
+        }
+      },
+      {
+        "fieldName": "updatedAt",
+        "indexed": false,
+        "value": {
+          "type": "DATETIME",
+          "allowNull": false,
+          "defaultValue": null,
+          "primaryKey": false,
+          "autoIncrement": false,
+          "comment": null
+        }
+      }
+    ]
+  },
+  {
+    "modelName": "thesis",
+    "fields": [
+      {
+        "fieldName": "title",
+        "indexed": true,
+        "value": {
+          "type": "TEXT",
+          "allowNull": false,
+          "defaultValue": null,
+          "primaryKey": false,
+          "autoIncrement": false,
+          "comment": null
+        }
+      },
+      {
+        "fieldName": "id",
+        "indexed": false,
+        "value": {
+          "type": "INT",
+          "allowNull": false,
+          "defaultValue": null,
+          "primaryKey": false,
+          "autoIncrement": false,
+          "comment": null
+        }
+      }
+    ]
+  }
+]

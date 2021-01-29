@@ -1,0 +1,41 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ],
+    [
+      "stage-2"
+    ]
+  ],
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "root": [
+          "./"
+        ],
+        "alias": {
+          "config": "./src/config",
+          "connections": "./src/connections",
+          "constants": "./src/constants",
+          "controllers": "./src/controllers",
+          "loaders": "./src/loaders",
+          "locales": "./src/locales",
+          "middlewares": "./src/middlewares",
+          "models": "./src/models",
+          "queues": "./src/queues",
+          "routes": "./src/routes",
+          "services": "./src/services",
+          "utils": "./src/utils"
+        }
+      }
+    ],
+    "transform-runtime"
+  ],
+  "comments": false
+}
