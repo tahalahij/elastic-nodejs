@@ -9,7 +9,7 @@ export default {
     async updateTablesList() {
         return IndexesService.updateTablesList()
     },
-    async index(index, field) {
+    async setFieldIndexStatus(index, field) {
         const tables = await IndexesService.getTables();
         const indexOfModel = tables.findIndex(({ modelName }) => modelName===index)
         const indexOfField = tables[indexOfModel].fields.findIndex(({ fieldName }) => fieldName===field)

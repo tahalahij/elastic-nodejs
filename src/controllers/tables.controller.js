@@ -19,10 +19,10 @@ export default {
             res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
         }
     },
-    async index(req, res, next) {
+    async setFieldIndexStatus(req, res, next) {
         try {
             const { body: { model, field } } = req
-            const body = await TablesService.index(model, field);
+            const body = await TablesService.setFieldIndexStatus(model, field);
             res.status(HTTP_CODE.OK).send(body);
         } catch (err) {
             console.log({ err })

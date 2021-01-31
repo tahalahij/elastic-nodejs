@@ -23,19 +23,28 @@ export default {
             body,
         });
     },
+    async update({ index, id, body = {} }) {
+        return ElasticSearch.update({
+            index,
+            id,
+            body,
+        });
+    },
 
     async getAll({ index }) {
         return ElasticSearch.search({ index });
     },
 
-    async search({ index, match = {} }) {
+    async search({ index, query }) {
         return ElasticSearch.search({
             index,
-            body: {
-                query: {
-                    match,
-                },
-            },
+            body:{
+                "query": {
+                    "query_string": {
+                        query
+                    }
+                }
+            }
         });
     },
 };

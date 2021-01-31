@@ -7,10 +7,10 @@ import { ElasticSearch } from "../connections";
 const router = Router();
 
 router.get('/', (req, res) => res.render('search', { baseUrl: 'http://localhost:3001/' }));
-router.get('/startrabbit', async (req, res) => {
+router.get('/api/v1/startrabbit', async (req, res) => {
     try {
         await startThesisQueue()
-        res.send('started')
+        res.send('Rabbit Started')
     } catch (e) {
         res.send(e)
     }

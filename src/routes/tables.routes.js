@@ -13,7 +13,7 @@ router.get(
 );
 router.post(
         '/index',
-        TablesController.index,
+        TablesController.setFieldIndexStatus,
 );
 
 export default router;

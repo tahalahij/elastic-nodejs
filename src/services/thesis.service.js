@@ -36,7 +36,7 @@ export default {
     },
 
     async search(title) {
-        return ElasticSearch.search({ index, match: { title } });
+        return ElasticSearch.search({ index, query: title });
     },
 
     async importAll() {

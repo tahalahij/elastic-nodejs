@@ -17,8 +17,8 @@ async function getChannel(config, queue) {
             // provider needs to set this option
             durable: true,
         });
-        console.log({ config })
-        console.log({ channel })
+        await channel.prefetch(2,false)
+        console.log('rabbit connected with config', config)
         return channel;
     } catch (error) {
         Logger.error(LOG_LABELS.RABBIT_ERROR, error);
