@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import thesisRoutes from './thesis.routes';
 import tablesRoutes from './tables.routes';
-import { startThesisQueue } from "../queues";
+import { startTriggerQueue } from "../queues";
 import { ElasticSearch } from "../connections";
 
 const router = Router();
@@ -9,7 +9,7 @@ const router = Router();
 router.get('/', (req, res) => res.render('search', { baseUrl: 'http://localhost:3001/' }));
 router.get('/api/v1/startrabbit', async (req, res) => {
     try {
-        await startThesisQueue()
+        await startTriggerQueue()
         res.send('Rabbit Started')
     } catch (e) {
         res.send(e)

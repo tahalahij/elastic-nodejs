@@ -1,4 +1,4 @@
-import { ThesisService } from '../services';
+import { TablesService, ThesisService } from '../services';
 import { HTTP_CODE } from '../constants/enums';
 
 async function setIndex(req, res, next) {
@@ -46,7 +46,7 @@ async function getAll(req, res, next) {
 async function search(req, res, next) {
     try {
         const { title } = req.query;
-        const { body } = await ThesisService.search(String(title));
+        const { body } = await TablesService.search(String(title));
         console.log({ body })
         res.status(HTTP_CODE.OK).send({ thesis: body.hits.hits });
     } catch (err) {

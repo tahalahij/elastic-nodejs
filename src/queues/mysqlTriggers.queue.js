@@ -22,8 +22,7 @@ async function onMessage(message, channel) {
     console.log('message from rabbit :', content);
     console.log('--------------');
     await IndexesService.handleTriggerMessages(content)
-
-    // channel.ack(message);
+    channel.ack(message);
 }
 
 export default async function init() {

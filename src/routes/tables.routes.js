@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { TablesController } from '../controllers';
+import { TablesController, ThesisController } from '../controllers';
 
 const router = Router();
 
@@ -14,6 +14,15 @@ router.get(
 router.post(
         '/index',
         TablesController.setFieldIndexStatus,
+);
+router.delete(
+        '/:index',
+        TablesController.deleteIndex,
+);
+
+router.get(
+        '/search/:index',
+        TablesController.search,
 );
 
 export default router;

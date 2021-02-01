@@ -15,6 +15,24 @@ map.set("CHAR", "text")
 map.set("TEXT", "text")
 map.set("VARBINARY", "binary")
 map.set("TIMESTAMP", "date")
-export default map;
+
+export default {
+    getElasticTypeFromMysqlType(mysqlType) {
+        let type = map.get(mysqlType)
+        if (type) {
+            return type
+        }
+        Array.from(map.keys()).map((key) => {
+            if (mysqlType.includes(key)) {
+                type = map.get(key)
+            }
+        })
+        if (!type) {
+            return 'text'
+        }
+        return type
+
+    }
+};
 
 

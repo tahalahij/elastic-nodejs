@@ -4,8 +4,18 @@ export default {
     async setIndex({ index, body }) {
         return ElasticSearch.indices.put_mapping({ index, body });
     },
+    async createIndex({ index, body }) {
+        return ElasticSearch.indices.create({ index, body });
+    },
     async getIndex({ index }) {
-        return ElasticSearch.indices.get({ index});
+        try {
+            return await ElasticSearch.indices.get({ index })
+        } catch (e) {
+            if (e.meta.statusCode===404) {
+                return false
+            }
+        }
+
     },
 
     async deleteIndex({ index }) {
@@ -27,7 +37,10 @@ export default {
         return ElasticSearch.update({
             index,
             id,
-            body,
+            body: {
+                doc: body,
+                doc_as_upsert: true
+            },
         });
     },
 
@@ -38,7 +51,7 @@ export default {
     async search({ index, query }) {
         return ElasticSearch.search({
             index,
-            body:{
+            body: {
                 "query": {
                     "query_string": {
                         query

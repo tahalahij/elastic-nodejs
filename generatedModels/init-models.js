@@ -1,15 +1,17 @@
 var DataTypes = require("sequelize").DataTypes;
-var _theses = require("./theses");
-var _thesis = require("./thesis");
+var _article = require("./article");
+var _user = require("./user");
 
 function initModels(sequelize) {
-  var theses = _theses(sequelize, DataTypes);
-  var thesis = _thesis(sequelize, DataTypes);
+  var article = _article(sequelize, DataTypes);
+  var user = _user(sequelize, DataTypes);
 
+  Article.belongsTo(User, { as: "createdByUser", foreignKey: "createdBy"});
+  User.hasMany(Article, { as: "articles", foreignKey: "createdBy"});
 
   return {
-    theses,
-    thesis,
+    article,
+    user,
   };
 }
 module.exports = initModels;

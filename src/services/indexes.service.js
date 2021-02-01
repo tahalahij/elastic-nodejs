@@ -1,21 +1,9 @@
 import fs from 'fs';
-import SequelizeAuto from 'sequelize-auto';
-import { Mysql } from "../connections";
-import { ElasticSearch } from "../utils";
-
-const generator = new SequelizeAuto(Mysql, null, null, {
-    dialect: 'mysql',
-    directory: 'generatedModels',
-    // caseFile: 'l',
-    // caseModel: 'p',
-    // caseProp: 'c',
-    language: 'es6',
-    singularize: false,
-});
+import { ElasticSearch, ModelGenerator, Types } from "../utils";
 
 export default {
     async updateTablesList() {
-        const data = await generator.run()
+        const data = await ModelGenerator.run()
         const tables = Object.keys(data.tables).map((k) => {
             return {
                 modelName: k, fields: Object.keys(data.tables[k]).map((field) => {
@@ -36,58 +24,98 @@ export default {
     async getFieldsOfModelToIndex(index) {
         const tables = await this.getTables()
         const indexOfModel = tables.findIndex(({ modelName }) => modelName===index)
-        const fieldsToIndex = tables[indexOfModel].fields.map(({ indexed, fieldName }) => {
+        const fieldsToIndex = []
+        tables[indexOfModel].fields.map(({ indexed, fieldName }) => {
             if (indexed) {
-                return fieldName
+                fieldsToIndex.push(fieldName)
             }
         })
         console.log({ fieldsToIndex })
         return fieldsToIndex
     },
+    async createIndexFromTable(index) {
+        const tables = await this.getTables()
+        const indexOfModel = tables.findIndex(({ modelName }) => modelName===index)
+        const properties = {}
+        tables[indexOfModel].fields.map(({ indexed, fieldName, value }) => {
+            if (indexed) {
+                properties[fieldName] = { type: Types.getElasticTypeFromMysqlType(value.type) }
+            }
+        })
+        await ElasticSearch.createIndex({
+            index,
+            body: {
+                "mappings": {
+                    properties
+                }
+            }
+        })
+
+    },
     async handleTriggerMessages(message) {
         const { model, document, type } = message
+        const index = model.trim()
         switch (type) {
             case 'insert': {
                 try {
-                    const res = await ElasticSearch.getIndex({ index: model.trim() })
-                    const fields = await this.getFieldsOfModelToIndex(model)
-                    const body = fields.map((field) => {
+                    // check if index exists in elastic
+                    const indexExists = await ElasticSearch.getIndex({ index })
+                    console.log('indexExists:  ', !!indexExists)
+                    const fields = await this.getFieldsOfModelToIndex(index)
+                    console.log({ fields })
+                    const body = {};
+                    // create the insert object
+                    fields.map((field) => {
                         if (document.hasOwnProperty(field)) {
-                            return { [field]: document[field] }
+                            body[field] = document[field]
                         }
                     })
-                    console.log('body of doc inserted: ', body)
-                    await ElasticSearch.insert({ index: model, id: document.id, body })
-                    console.log({ res })
+                    if (!indexExists) {
+                        await this.createIndexFromTable(index)
+                    }
+                    console.log(`body of doc to be ${type}ed: `)
+                    console.log(body)
+                    await ElasticSearch.insert({ index, id: document.id, body })
                 } catch (e) {
-                    console.log(` index for model ${model.trim()} does not exists : error :`, e)
+                    console.log(` index for model ${model.trim()} does not exists : error :`, e.meta.body)
                 }
                 break
             }
             case 'update': {
                 try {
-                    const res = await ElasticSearch.getIndex({ index: model.trim() })
-                    const fields = await this.getFieldsOfModelToIndex(model)
-                    const body = fields.map((field) => {
+                    // check if index exists in elastic
+                    const indexExists = await ElasticSearch.getIndex({ index })
+                    console.log('indexExists:  ', !!indexExists)
+                    const fields = await this.getFieldsOfModelToIndex(index)
+                    console.log({ fields })
+                    const body = {};
+                    // create the insert object
+                    fields.map((field) => {
                         if (document.hasOwnProperty(field)) {
-                            return { [field]: document[field] }
+                            body[field] = document[field]
                         }
                     })
-                    console.log('body of doc updated: ', body)
-                    await ElasticSearch.update({ index: model, id: document.id, body })
-                    console.log({ res })
+                    if (!indexExists) {
+                        await this.createIndexFromTable(index)
+                    }
+                    console.log(`body of doc to be ${type}ed: `)
+                    console.log(body)
+                    await ElasticSearch.update({ index, id: document.id, body })
                 } catch (e) {
-                    console.log(` index for model ${model.trim()} does not exists : error :`, e)
+                    console.log(` index for model ${model.trim()} does not exists : error :`, e.meta.body)
                 }
                 break
             }
             case 'delete': {
                 try {
-                    const res = await ElasticSearch.getIndex({ index: model.trim() })
-                    await ElasticSearch.deleteDoc({ index: model, id: document.id })
-                    console.log({ res })
+                    // check if index exists in elastic
+                    const indexExists = await ElasticSearch.getIndex({ index })
+                    if (indexExists) {
+                        console.log(`doc with id ${document.id} being deleted`)
+                        await ElasticSearch.deleteDoc({ index: model, id: document.id })
+                    }
                 } catch (e) {
-                    console.log(` index for model ${model.trim()} does not exists : error :`, e)
+                    console.log(` index for model ${model.trim()} does not exists : error :`, e.meta.body)
                 }
                 break
             }

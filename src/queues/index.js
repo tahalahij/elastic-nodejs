@@ -1,3 +1,3 @@
-import startThesisQueue from './thesis.queue';
+import startTriggerQueue from './mysqlTriggers.queue';
 
-export { startThesisQueue };
+export { startTriggerQueue };
