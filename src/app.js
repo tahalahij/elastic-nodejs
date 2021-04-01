@@ -21,7 +21,8 @@ function start() {
     app.listen(app.get('port'), () => {
         Logger.info(
                 LOG_LABELS.APP_START,
-                `🔥 App is running at http://localhost:${app.get('port')}`,
+                `🔥 App is running at http://localhost:${app.get('port')},
+                The client running at  ==>  http://localhost:3000/search  <===`,
         );
     });
     return app;

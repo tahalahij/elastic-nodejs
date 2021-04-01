@@ -1,15 +1,19 @@
 import { Router } from 'express';
-import { TablesController, ThesisController } from '../controllers';
+import { TablesController } from 'controllers';
 
 const router = Router();
 
 router.get(
-        '/all',
+        '/',
         TablesController.getAll,
 );
 router.get(
         '/updateTables',
-        TablesController.updateTablesList,
+        TablesController.syncModels,
+);
+router.get(
+        '/:index',
+        TablesController.getIndexByName,
 );
 router.post(
         '/index',

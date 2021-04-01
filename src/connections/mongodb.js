@@ -1,6 +1,6 @@
-import bluebird from 'bluebird';
 import mongoose from 'mongoose';
 import config from '../config';
+import { Logger } from '../utils';
 
 const { connectionString, replicaSet } = config.mongodb;
 const LOG_LABEL = 'MONGODB_CONNECTION';
@@ -33,7 +33,5 @@ mongoose.connection.on('error', (error) => {
     Logger.error(LOG_LABEL, 'Connection Error: ', error);
     throw new Error(`unable to connect to mongo db: ${connectionString}`);
 });
-
-mongoose.Promise = bluebird;
 
 export default mongoose;
