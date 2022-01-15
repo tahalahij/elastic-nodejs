@@ -23,6 +23,13 @@ const winstonLogger = winston.createLogger({
                     customFormatter,
             ),
         }),
+        new winston.transports.File({
+            filename: 'logs/logs.log',
+            level: 'error',
+            format: format.combine(
+                    format.timestamp(),
+                    customFormatter)
+        }),
     ],
 });
 
