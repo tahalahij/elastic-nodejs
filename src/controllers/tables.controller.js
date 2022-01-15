@@ -53,6 +53,17 @@ export default {
             res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
         }
     },
+
+    async importAll(req, res, next) {
+        try {
+            const { index } = req.params;
+            const length = await IndexesService.importAll(index);
+            res.status(HTTP_CODE.OK).send({ lengthOfImportedDocs: length });
+        } catch (err) {
+            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+        }
+    },
+
     async search(req, res, next) {
         try {
             const { index } = req.params;

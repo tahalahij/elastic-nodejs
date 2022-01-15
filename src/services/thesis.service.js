@@ -39,13 +39,4 @@ export default {
         return ElasticSearch.search({ index, query: title });
     },
 
-    async importAll() {
-        const data = await Thesis.findAll();
-        console.log('#', data.length, ' thesis found in db and inserting ...');
-        console.log('data :', data);
-        return Promise.all(data.map(({ dataValues }) => {
-            console.log('inserting ',  dataValues , 'into elastic');
-            return this.insert(dataValues.id, dataValues.title);
-        }));
-    },
 };

@@ -23,6 +23,10 @@ router.delete(
         '/:index',
         TablesController.deleteIndex,
 );
+router.get(
+        '/import/:index',
+        TablesController.importAll,
+);
 
 router.get(
         '/search/:index',
