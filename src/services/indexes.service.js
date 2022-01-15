@@ -1,12 +1,12 @@
-import { ElasticSearch, ModelGenerator, Types } from "../utils";
+import { ElasticSearch, ModelGenerator, initModels, Types } from "../utils";
 import { Index } from "models";
+import { Mysql } from "../connections";
+import BBPromise from "bluebird";
 
 export default {
     // generate/update the index model in mongodb based on the models in mysql database
     async syncModels() {
-        console.log(555)
         const data = await ModelGenerator.run() // generates tables of all collections
-        console.log(22222222, { data })
         Object.keys(data.tables).map(async (modelName) => {
             const model = await Index.findOne({ modelName })
             if (model) { // update existing model
@@ -163,6 +163,23 @@ export default {
     },
     async getAllIndexes() {
         return Index.find({})
+    },
+    // reads data from production mysql database and inserts them to elastic for that model
+    async importAll(index) {
+        await initModels(); // add  generatedModels to Sequelize
+        const modelName = String(index).toLowerCase();
+        const model = await Mysql.model(modelName);
+
+        const data = await model.findAll();
+        console.log('from model :', index, ' found  #', data.length, 'docs in db and inserting ...');
+        await BBPromise.map(data, ({ dataValues }) => {
+                    console.log('inserting ', dataValues, 'into elastic');
+                    return ElasticSearch.insert({
+                        index, id: dataValues.id, body: dataValues
+                    });
+                }
+                , { concurrency: 3 });
+        return data.length;
     },
     async search(index, query) {
         return ElasticSearch.search({ index, query });
