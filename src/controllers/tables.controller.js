@@ -8,7 +8,7 @@ export default {
             console.log('body', body);
             res.status(HTTP_CODE.OK).send({ body });
         } catch (err) {
-            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     },
     async getIndexByName(req, res, next) {
@@ -18,18 +18,16 @@ export default {
             console.log('body', body);
             res.status(HTTP_CODE.OK).send({ body });
         } catch (err) {
-            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     },
     async syncModels(req, res, next) {
-        console.log(1111)
         try {
             await IndexesService.syncModels();
-            console.log(999)
             res.status(HTTP_CODE.OK).send("updated");
         } catch (err) {
             console.log({ err })
-            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     },
     async setFieldIndexStatus(req, res, next) {
@@ -40,7 +38,7 @@ export default {
             res.status(HTTP_CODE.OK).send(true);
         } catch (err) {
             console.log(' error in setFieldIndexStatus :  ', err)
-            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     },
     async deleteIndex(req, res, next) {
@@ -50,7 +48,7 @@ export default {
             console.log('body', body);
             res.status(HTTP_CODE.OK).send({ body });
         } catch (err) {
-            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     },
 
@@ -60,10 +58,9 @@ export default {
             const length = await IndexesService.importAll(index);
             res.status(HTTP_CODE.OK).send({ lengthOfImportedDocs: length });
         } catch (err) {
-            res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     },
-
     async search(req, res, next) {
         try {
             const { index } = req.params;
@@ -77,7 +74,7 @@ export default {
                 return res.status(HTTP_CODE.NOT_FOUND).send('index not found');
             }
             console.log('error in  search', err)
-            return res.status(HTTP_CODE.INTERNAL_SERVER_ERROR).send({ err });
+            next(err);
         }
     }
 

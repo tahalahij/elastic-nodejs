@@ -28,9 +28,29 @@ export default {
                 await Index.create(newModel)
             }
         })
+
+        await initModels(); // add  generatedModels to Sequelize
     },
     async getIndexByModelName(modelName) {
         return Index.findOne({ modelName })
+    },
+    async getUpsertBody(index, document) {
+        // check if index exists in elastic
+        const indexExists = await ElasticSearch.getIndex({ index })
+        console.log('indexExists:  ', !!indexExists)
+        const fields = await this.getFieldsOfModelToIndex(index)
+        console.log({ fields })
+        const body = {};
+        // create the insert object
+        fields.map((field) => {
+            if (document.hasOwnProperty(field)) {
+                body[field] = document[field]
+            }
+        })
+        if (!indexExists) {
+            await this.createIndexFromModel(index)
+        }
+        return body;
     },
     async getFieldsOfModelToIndex(modelName) {
         let model = await this.getIndexByModelName(modelName)
@@ -48,7 +68,11 @@ export default {
         return fieldsToIndex
     },
     async createIndexFromModel(index) {
-        const model = await this.getIndexByModelName(index)
+        const model = await this.getIndexByModelName(index);
+        if (!model) {
+            console.log(`could not find model for index :${index}`);
+            return;
+        }
         const properties = {}
         model.fields.map(({ indexed, fieldName, type }) => {
             if (indexed) {
@@ -70,22 +94,8 @@ export default {
         switch (type) {
             case 'insert': {
                 try {
-                    // check if index exists in elastic
-                    const indexExists = await ElasticSearch.getIndex({ index })
-                    console.log('indexExists:  ', !!indexExists)
-                    const fields = await this.getFieldsOfModelToIndex(index)
-                    console.log({ fields })
-                    const body = {};
-                    // create the insert object
-                    fields.map((field) => {
-                        if (document.hasOwnProperty(field)) {
-                            body[field] = document[field]
-                        }
-                    })
-                    if (!indexExists) {
-                        await this.createIndexFromModel(index)
-                    }
-                    console.log(`body of doc to be ${type}ed: `)
+                    const body = await this.getUpsertBody(index, document);
+                    console.log('body of doc to be inserted: ')
                     console.log(body)
                     await ElasticSearch.insert({ index, id: document.id, body })
                 } catch (e) {
@@ -96,21 +106,8 @@ export default {
             case 'update': {
                 try {
                     // check if index exists in elastic
-                    const indexExists = await ElasticSearch.getIndex({ index })
-                    console.log('indexExists:  ', !!indexExists)
-                    const fields = await this.getFieldsOfModelToIndex(index)
-                    console.log({ fields })
-                    const body = {};
-                    // create the insert object
-                    fields.map((field) => {
-                        if (document.hasOwnProperty(field)) {
-                            body[field] = document[field]
-                        }
-                    })
-                    if (!indexExists) {
-                        await this.createIndexFromModel(index)
-                    }
-                    console.log(`body of doc to be ${type}ed: `)
+                    const body = await this.getUpsertBody(index, document);
+                    console.log('body of doc to be updated: ')
                     console.log(body)
                     await ElasticSearch.update({ index, id: document.id, body })
                 } catch (e) {
@@ -165,12 +162,13 @@ export default {
         return Index.find({})
     },
     // reads data from production mysql database and inserts them to elastic for that model
+    // return number of docs inserted
     async importAll(index) {
-        await initModels(); // add  generatedModels to Sequelize
+        await this.createIndexFromModel(index);
         const modelName = String(index).toLowerCase();
         const model = await Mysql.model(modelName);
 
-        const data = await model.findAll();
+        const data = await model.findAll({ where: {} });
         console.log('from model :', index, ' found  #', data.length, 'docs in db and inserting ...');
         await BBPromise.map(data, ({ dataValues }) => {
                     console.log('inserting ', dataValues, 'into elastic');
@@ -183,7 +181,8 @@ export default {
     },
     async search(index, query) {
         return ElasticSearch.search({ index, query });
-    }, async deleteIndex(index) {
+    },
+    async deleteIndex(index) {
         return ElasticSearch.deleteIndex({ index });
     }
 }
