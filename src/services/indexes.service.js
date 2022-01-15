@@ -1,4 +1,4 @@
-import { ElasticSearch, ModelGenerator, initModels, Types } from "../utils";
+import { ElasticSearch, ModelGenerator, initModels, Types, Logger } from "../utils";
 import { Index } from "models";
 import { Mysql } from "../connections";
 import BBPromise from "bluebird";
@@ -37,9 +37,9 @@ export default {
     async getUpsertBody(index, document) {
         // check if index exists in elastic
         const indexExists = await ElasticSearch.getIndex({ index })
-        console.log('indexExists:  ', !!indexExists)
+        Logger.debug('INDEXES_SERVICE:getUpsertBody', 'indexExists', { indexExists });
         const fields = await this.getFieldsOfModelToIndex(index)
-        console.log({ fields })
+        Logger.debug('INDEXES_SERVICE:getUpsertBody', 'fields', { fields });
         const body = {};
         // create the insert object
         fields.map((field) => {
@@ -55,6 +55,7 @@ export default {
     async getFieldsOfModelToIndex(modelName) {
         let model = await this.getIndexByModelName(modelName)
         if (!model) {
+            Logger.debug('INDEXES_SERVICE:getFieldsOfModelToIndex', '!model', { modelName });
             model = await this.syncModels()
             model = await this.getIndexByModelName(modelName)
         }
@@ -64,12 +65,13 @@ export default {
                 fieldsToIndex.push(fieldName)
             }
         })
-        console.log({ fieldsToIndex })
+        Logger.debug('INDEXES_SERVICE:getFieldsOfModelToIndex', 'fieldsToIndex', { fieldsToIndex });
         return fieldsToIndex
     },
     async createIndexFromModel(index) {
         const model = await this.getIndexByModelName(index);
         if (!model) {
+            Logger.error('INDEXES_SERVICE:createIndexFromModel', '!model', { index });
             console.log(`could not find model for index :${index}`);
             return;
         }
@@ -79,6 +81,7 @@ export default {
                 properties[fieldName] = { type: Types.getElasticTypeFromMysqlType(type) }
             }
         })
+        Logger.debug('INDEXES_SERVICE:createIndexFromModel', 'createIndex', { properties });
         await ElasticSearch.createIndex({
             index,
             body: {
@@ -95,11 +98,11 @@ export default {
             case 'insert': {
                 try {
                     const body = await this.getUpsertBody(index, document);
-                    console.log('body of doc to be inserted: ')
-                    console.log(body)
+                    Logger.debug('INDEXES_SERVICE:handleTriggerMessages', 'insert', { body });
                     await ElasticSearch.insert({ index, id: document.id, body })
                 } catch (e) {
-                    console.log(` index for model ${model.trim()} does not exists : error :`, e)
+                    Logger.error('INDEXES_SERVICE:handleTriggerMessages',
+                            `insert: index for model ${model.trim()} does not exists `, e);
                 }
                 break
             }
@@ -107,11 +110,11 @@ export default {
                 try {
                     // check if index exists in elastic
                     const body = await this.getUpsertBody(index, document);
-                    console.log('body of doc to be updated: ')
-                    console.log(body)
+                    Logger.debug('INDEXES_SERVICE:handleTriggerMessages', 'update', { body });
                     await ElasticSearch.update({ index, id: document.id, body })
                 } catch (e) {
-                    console.log(` index for model ${model.trim()} does not exists : error :`, e)
+                    Logger.error('INDEXES_SERVICE:handleTriggerMessages',
+                            `update: index for model ${model.trim()} does not exists `, e);
                 }
                 break
             }
@@ -120,16 +123,19 @@ export default {
                     // check if index exists in elastic
                     const indexExists = await ElasticSearch.getIndex({ index })
                     if (indexExists) {
-                        console.log(`doc with id ${document.id} being deleted`)
+                        Logger.debug('INDEXES_SERVICE:handleTriggerMessages',
+                                `doc being deleted `, { index, id: document.id });
                         await ElasticSearch.deleteDoc({ index: model, id: document.id })
                     }
                 } catch (e) {
-                    console.log(` index for model ${model.trim()} does not exists : error :`, e)
+                    Logger.error('INDEXES_SERVICE:handleTriggerMessages',
+                            `delete`, e);
                 }
                 break
             }
             case 'default':
-                console.log('undefined trigger type ,', { model, document, type })
+                Logger.error('INDEXES_SERVICE:handleTriggerMessages',
+                        'default: undefined trigger type ', { model, document, type });
         }
     },
     async setFieldIndexStatus(index, field, indexed = true) {
@@ -140,10 +146,16 @@ export default {
         modelField.indexed = indexed
         await model.save()
         const type = Types.getElasticTypeFromMysqlType(modelField.type)
-        console.log(' modelField, ', modelField)
-        console.log('indexing : index:', index, ' field :', field, ' type,', type, 'indexExists', !!indexExists)
+        Logger.debug('INDEXES_SERVICE:setFieldIndexStatus', 'indexing field', {
+            modelField,
+            field,
+            type,
+            index,
+            indexExists
+        })
         // is this the field of the model that is being indexed? if so create the index first
         if (!indexExists) {
+            Logger.debug('INDEXES_SERVICE:setFieldIndexStatus', '!indexExists', { index })
             await this.createIndexFromModel(index)
         } else {
             return ElasticSearch.setIndex({
@@ -164,19 +176,21 @@ export default {
     // reads data from production mysql database and inserts them to elastic for that model
     // return number of docs inserted
     async importAll(index) {
+        Logger.debug('INDEXES_SERVICE:importAll', 'start', { index })
         await this.createIndexFromModel(index);
         const modelName = String(index).toLowerCase();
         const model = await Mysql.model(modelName);
 
         const data = await model.findAll({ where: {} });
-        console.log('from model :', index, ' found  #', data.length, 'docs in db and inserting ...');
+
+        Logger.debug('INDEXES_SERVICE:importAll', 'inserting', { index, length: data.length })
         await BBPromise.map(data, ({ dataValues }) => {
-                    console.log('inserting ', dataValues, 'into elastic');
                     return ElasticSearch.insert({
                         index, id: dataValues.id, body: dataValues
                     });
                 }
                 , { concurrency: 3 });
+        Logger.debug('INDEXES_SERVICE:importAll', 'done ', { index, length: data.length })
         return data.length;
     },
     async search(index, query) {
