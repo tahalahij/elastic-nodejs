@@ -18,12 +18,6 @@ const configs = {
             return `mongodb://${this.host}/${this.name}`;
         },
     },
-    redis: {
-        port: process.env.REDIS_PORT || 6379,
-        host: process.env.REDIS_HOST || 'localhost',
-        password: process.env.REDIS_PASSWORD,
-        db: process.env.REDIS_DB || 0,
-    },
     mySql: {
         host: process.env.MYSQL_HOST || 'localhost',
         user: process.env.MYSQL_USER,
