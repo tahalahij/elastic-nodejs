@@ -184,10 +184,11 @@ export default {
         const data = await model.findAll({ where: {} });
 
         Logger.debug('INDEXES_SERVICE:importAll', 'inserting', { index, length: data.length })
-        await BBPromise.map(data, ({ dataValues }) => {
-                    return ElasticSearch.insert({
+        await BBPromise.map(data, async ({ dataValues }) => {
+                    await ElasticSearch.update({
                         index, id: dataValues.id, body: dataValues
                     });
+                    Logger.debug('INDEXES_SERVICE:importAll', 'inserted doc with id', { index, id: dataValues.id, })
                 }
                 , { concurrency: 3 });
         Logger.debug('INDEXES_SERVICE:importAll', 'done ', { index, length: data.length })
