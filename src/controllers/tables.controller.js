@@ -12,6 +12,15 @@ export default {
             next(err);
         }
     },
+    async getAllElasticIndexes(req, res, next) {
+        try {
+            const body = await IndexesService.getAllElasticIndexes();
+            Logger.debug('TABLES_CONTROLLER:getAllElasticIndexes', 'body', body);
+            res.status(HTTP_CODE.OK).send({ body });
+        } catch (err) {
+            next(err);
+        }
+    },
     async getIndexByName(req, res, next) {
         try {
             const { index } = req.params

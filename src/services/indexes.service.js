@@ -173,6 +173,10 @@ export default {
     async getAllIndexes() {
         return Index.find({})
     },
+    async getAllElasticIndexes() {
+        const data = await ElasticSearch.cat.indices({ format: "JSON" });
+        return data.body.map(i => i.index).filter(i => i[0]!=='.') // elastic config indexes start with "."
+    },
     // reads data from production mysql database and inserts them to elastic for that model
     // return number of docs inserted
     async importAll(index) {
