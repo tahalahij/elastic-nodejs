@@ -5,7 +5,7 @@ import { startTriggerQueue } from "../queues";
 const router = Router();
 
 // router.get('/', (req, res) => res.render('search', { baseUrl: 'http://localhost:3001/' }));
-router.get('/', (req, res) => res.send(" app is running, You need to open the panel "));
+router.get('/', (req, res) => res.redirect('http://localhost:3000/search'));
 router.get('/api/v1/startrabbit', async (req, res) => {
     try {
         await startTriggerQueue()
