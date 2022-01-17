@@ -8,6 +8,10 @@ router.get(
         TablesController.getAll,
 );
 router.get(
+        '/elastic/indexes',
+        TablesController.getAllElasticIndexes,
+);
+router.get(
         '/updateTables',
         TablesController.syncModels,
 );
