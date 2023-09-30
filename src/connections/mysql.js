@@ -6,5 +6,5 @@ console.log(' mysql connection config', { user, password, database, host })
 export default new Sequelize(database, user, password, {
     host,
     port,
-    dialect: 'mysql',
+    dialect: 'mssql',
 });
